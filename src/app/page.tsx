@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ModulesGrid } from "@/components/ui/modules-grid";
 import { VerticalImageStack } from "@/components/ui/vertical-image-stack";
+import { RevealWaveImage } from "@/components/ui/reveal-wave-image";
 import { motion, useScroll, useTransform } from "motion/react";
 
 // ─── Work gallery data ────────────────────────────────────
@@ -406,21 +407,35 @@ export default function Home() {
               </p>
             </div>
           </motion.div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {clothingItems.map((item, i) => (
               <motion.div 
-                initial={{ opacity: 0, scale: 0.8, y: 30 }}
-                whileInView={{ opacity: 1, scale: 1, y: 0 }}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-50px" }}
-                transition={{ duration: 0.6, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ duration: 0.8, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
                 key={i} 
-                className="group relative overflow-hidden bg-[#0a0a0a] aspect-square rounded-sm"
+                className="group relative overflow-hidden bg-white/[0.02] aspect-square rounded-[2rem] border border-white/[0.08] backdrop-blur-3xl"
               >
-                <img
-                  src={item.src}
-                  alt={`smegomade clothing ${i + 1}`}
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                />
+                <div className="absolute inset-0 w-full h-full">
+                  <RevealWaveImage
+                    src={item.src}
+                    waveSpeed={0.3}
+                    waveFrequency={1.2}
+                    waveAmplitude={0.4}
+                    revealRadius={0.45}
+                    revealSoftness={0.8}
+                    pixelSize={2.5}
+                    mouseRadius={0.3}
+                  />
+                </div>
+                {/* Overlay to show interactions are possible */}
+                <div className="absolute inset-x-0 bottom-0 p-8 z-20 pointer-events-none">
+                  <div className="h-px w-8 bg-white/20 mb-4 group-hover:w-12 transition-all duration-700" />
+                  <span className="font-mono text-[0.55rem] uppercase tracking-[0.2em] text-white/30 group-hover:text-white/60 transition-colors duration-500">
+                    Piece {String(i + 1).padStart(2, '0')}
+                  </span>
+                </div>
               </motion.div>
             ))}
           </div>
