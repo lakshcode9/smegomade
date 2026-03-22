@@ -164,7 +164,9 @@ function GalleryCard({ src, label, type }: { src: string; label: string; type: s
 // ─── Main page ────────────────────────────────────────────
 export default function Home() {
   const [revealedClothing, setRevealedClothing] = useState<Set<number>>(new Set());
+  const [activeItemIndex, setActiveItemIndex] = useState(0);
   const clothingContainerRef = useRef<HTMLDivElement>(null);
+  
   const toggleClothing = (index: number) => {
     setRevealedClothing(prev => {
       const next = new Set(prev);
@@ -205,63 +207,75 @@ export default function Home() {
     if (clothingContainerRef.current) {
       const pinItems = clothingContainerRef.current.querySelectorAll(".clothing-item-trigger");
       
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: clothingContainerRef.current,
-          start: "top top",
-          end: "bottom bottom",
-          scrub: true,
-          pin: ".clothing-sticky-wrapper",
-        }
-      });
-
-      // Animate images swapping (PowerPoint Morph/Slide Style)
-      pinItems.forEach((item, index) => {
-        // Initial setup for all items
-        gsap.set(item, { 
-          opacity: index === 0 ? 1 : 0, 
-          zIndex: index === 0 ? 20 : 0, 
-          yPercent: index === 0 ? 0 : 50,
-          scale: index === 0 ? 1 : 0.8,
-          filter: "blur(0px)",
-          pointerEvents: index === 0 ? "auto" : "none" 
+      if (pinItems.length > 0) {
+        const tl = gsap.timeline({
+          scrollTrigger: {
+            trigger: clothingContainerRef.current,
+            start: "top top",
+            end: "bottom bottom",
+            scrub: true,
+            pin: ".clothing-sticky-wrapper",
+            onUpdate: (self) => {
+              // Update state for WebGL rendering management
+              const progress = self.progress;
+              const index = Math.min(
+                Math.floor(progress * clothingItems.length), 
+                clothingItems.length - 1
+              );
+              if (index !== activeItemIndex) {
+                setActiveItemIndex(index);
+              }
+            }
+          }
         });
 
-        const overlap = 0.6; // Higher overlap for "morph" feel
-        const offset = index;
-
-        // Transition logic: Each item has an "Exit" phase and a "Next item enters" phase
-        if (index < pinItems.length - 1) {
-          const nextItem = pinItems[index + 1];
-
-          // Current item exits: slides UP and dissolves
-          tl.to(item, {
-            yPercent: -30,
-            scale: 1.1,
-            opacity: 0,
-            filter: "blur(20px)",
-            duration: 1,
-            ease: "power2.inOut",
-            onStart: () => {
-              gsap.set(item, { pointerEvents: "none" });
-            }
-          }, offset);
-
-          // Next item enters simultaneously: slides UP from below
-          tl.to(nextItem, {
-            yPercent: 0,
-            scale: 1,
-            opacity: 1,
+        // Animate images swapping (PowerPoint Morph/Slide Style)
+        pinItems.forEach((item, index) => {
+          // Initial setup for all items
+          gsap.set(item, { 
+            opacity: index === 0 ? 1 : 0, 
+            zIndex: index === 0 ? 20 : 0, 
+            yPercent: index === 0 ? 0 : 50,
+            scale: index === 0 ? 1 : 0.8,
             filter: "blur(0px)",
-            zIndex: 30, // Stack on top
-            duration: 1,
-            ease: "power2.inOut",
-            onStart: () => {
-              gsap.set(nextItem, { pointerEvents: "auto", zIndex: 30 });
-            }
-          }, offset);
-        }
-      });
+            pointerEvents: index === 0 ? "auto" : "none" 
+          });
+
+          const offset = index;
+
+          // Transition logic: Each item has an "Exit" phase and a "Next item enters" phase
+          if (index < pinItems.length - 1) {
+            const nextItem = pinItems[index + 1];
+
+            // Current item exits: slides UP and dissolves
+            tl.to(item, {
+              yPercent: -30,
+              scale: 1.1,
+              opacity: 0,
+              filter: "blur(10px)", // Reduced blur for performance
+              duration: 1,
+              ease: "power2.inOut",
+              onStart: () => {
+                gsap.set(item, { pointerEvents: "none" });
+              }
+            }, offset);
+
+            // Next item enters simultaneously: slides UP from below
+            tl.to(nextItem, {
+              yPercent: 0,
+              scale: 1,
+              opacity: 1,
+              filter: "blur(0px)",
+              zIndex: 30, // Stack on top
+              duration: 1,
+              ease: "power2.inOut",
+              onStart: () => {
+                gsap.set(nextItem, { pointerEvents: "auto", zIndex: 30 });
+              }
+            }, offset);
+          }
+        });
+      }
     }
 
     return () => {
@@ -535,6 +549,7 @@ export default function Home() {
                       pixelSize={2.5}
                       mouseRadius={0.3}
                       toggleColor={revealedClothing.has(i)}
+                      renderCanvas={Math.abs(activeItemIndex - i) <= 1}
                     />
                   </div>
                   {/* Overlay with counter */}

@@ -253,6 +253,7 @@ interface RevealWaveImageProps {
   mouseRadius?: number;
   toggleColor?: boolean;
   className?: string;
+  renderCanvas?: boolean;
 }
 
 export const RevealWaveImage = ({
@@ -266,6 +267,7 @@ export const RevealWaveImage = ({
   mouseRadius = 0.2,
   toggleColor = false,
   className = "h-full w-full",
+  renderCanvas = true,
 }: RevealWaveImageProps) => {
   const [isMouseInCanvas, setIsMouseInCanvas] = useState(false);
   const [aspectRatio, setAspectRatio] = useState<number | null>(null);
@@ -284,7 +286,7 @@ export const RevealWaveImage = ({
       onMouseEnter={() => setIsMouseInCanvas(true)}
       onMouseLeave={() => setIsMouseInCanvas(false)}
     >
-      {aspectRatio !== null && (
+      {aspectRatio !== null && renderCanvas ? (
         <Canvas
           style={{
             width: "100%",
@@ -308,6 +310,18 @@ export const RevealWaveImage = ({
             persistentColor={toggleColor}
           />
         </Canvas>
+      ) : (
+        aspectRatio !== null && (
+          <img 
+            src={src} 
+            alt="Clothing fallback" 
+            className="w-full h-full object-contain grayscale"
+            style={{ 
+              filter: toggleColor ? "none" : "grayscale(100%) blur(10px)",
+              transition: "filter 0.5s ease"
+            }}
+          />
+        )
       )}
     </div>
   );
