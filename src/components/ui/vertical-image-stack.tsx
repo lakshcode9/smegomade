@@ -131,39 +131,45 @@ export function VerticalImageStack({ images }: VerticalImageStackProps) {
               }}
             >
               <div
-                className="group relative h-[420px] w-[280px] overflow-hidden rounded-3xl bg-[#0a0a0a] ring-1 ring-white/10"
+                className="group relative h-[420px] w-[280px] overflow-hidden rounded-3xl bg-black/40 backdrop-blur-2xl ring-1 ring-white/10 transition-all duration-700 hover:ring-white/25"
                 style={{
                   boxShadow: isCurrent
-                    ? "0 25px 50px -12px rgba(255,255,255, 0.1), 0 0 0 1px rgba(255,255,255, 0.05)"
+                    ? "0 25px 50px -12px rgba(255,255,255, 0.12), 0 0 0 1px rgba(255,255,255, 0.05), inset 0 0 40px rgba(255,255,255,0.02)"
                     : "0 10px 30px -10px rgba(0,0,0, 0.5)",
                 }}
               >
-                {/* Card inner glow */}
-                <div className="absolute inset-0 z-10 rounded-3xl bg-gradient-to-b from-white/5 via-transparent to-transparent pointer-events-none" />
+                {/* Milky glass reflection overlay */}
+                <div className="absolute inset-0 z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700">
+                  <div className="absolute -inset-[100%] bg-gradient-to-br from-white/10 via-transparent to-transparent rotate-12 -translate-y-[10%] group-hover:translate-y-[0%] transition-transform duration-1000 ease-out" />
+                </div>
+
+                {/* Card edge highlight (milky) */}
+                <div className="absolute inset-0 z-10 rounded-3xl bg-[linear-gradient(110deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0)_40%,rgba(255,255,255,0)_60%,rgba(255,255,255,0.08)_100%)] pointer-events-none" />
 
                 <img
                   src={image.src || "/placeholder.svg"}
                   alt={image.alt}
                   style={{ pointerEvents: 'none' }}
-                  className="object-cover w-full h-full"
+                  className="object-cover w-full h-full scale-[1.01] transition-transform duration-1000 group-hover:scale-105"
                   draggable={false}
                 />
 
                 {/* Info Overlay for the image */}
-                <div className="absolute inset-x-0 bottom-0 z-20 h-40 bg-gradient-to-t from-black/90 to-transparent pointer-events-none" />
+                <div className="absolute inset-x-0 bottom-0 z-20 h-48 bg-gradient-to-t from-black/95 via-black/40 to-transparent pointer-events-none" />
                 
                 {isCurrent && image.label && (
                   <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
+                    initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="absolute bottom-6 left-6 right-6 z-30 pointer-events-none"
+                    transition={{ delay: 0.2, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                    className="absolute bottom-8 left-8 right-8 z-30 pointer-events-none"
                   >
                     {image.type && (
-                      <span className="font-mono text-[0.55rem] uppercase tracking-widest text-white/50 mb-1 block">
+                      <span className="font-mono text-[0.6rem] uppercase tracking-widest text-white/30 mb-2 block">
                         {image.type}
                       </span>
                     )}
-                    <h3 className="font-black text-sm uppercase tracking-wide text-white leading-tight">
+                    <h3 className="font-black text-lg md:text-xl uppercase tracking-tighter text-white leading-[0.9] drop-shadow-2xl">
                       {image.label}
                     </h3>
                   </motion.div>

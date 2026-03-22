@@ -85,6 +85,16 @@ interface GridItemProps {
 }
 
 const GridItem = ({ area, icon, title, description, delay = 0 }: GridItemProps) => {
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const [position, setPosition] = React.useState({ x: 0, y: 0 });
+  const [isHovered, setIsHovered] = React.useState(false);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    setPosition({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+  };
+
   return (
     <motion.li 
       initial={{ opacity: 0, scale: 0.95, y: 30 }}
@@ -93,26 +103,39 @@ const GridItem = ({ area, icon, title, description, delay = 0 }: GridItemProps) 
       transition={{ duration: 0.8, delay, ease: [0.16, 1, 0.3, 1] }}
       className={cn("min-h-[14rem] list-none", area)}
     >
-      <div className="relative h-full rounded-[1.25rem] md:rounded-[1.5rem] border border-white/[0.08] bg-white/[0.02] backdrop-blur-3xl shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] p-2 md:p-3 overflow-hidden">
-        <GlowingEffect
-          blur={20}
-          spread={40}
-          glow={true}
-          disabled={false}
-          proximity={64}
-          inactiveZone={0.01}
-          borderWidth={3}
+      <div 
+        ref={containerRef}
+        onMouseMove={handleMouseMove}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        className="group relative h-full rounded-[1.25rem] md:rounded-[1.5rem] border border-white/[0.08] bg-white/[0.02] backdrop-blur-3xl shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] hover:shadow-[0_8px_32px_0_rgba(255,255,255,0.05)] p-2 md:p-3 overflow-hidden transition-all duration-700 ease-out hover:-translate-y-1 hover:border-white/[0.15]"
+      >
+        <div
+          className="pointer-events-none absolute inset-0 z-0 transition-opacity duration-1000 ease-out"
+          style={{
+            opacity: isHovered ? 1 : 0,
+            background: `radial-gradient(1000px circle at ${position.x}px ${position.y}px, rgba(255, 255, 255, 0.08), transparent 40%)`,
+          }}
         />
-        <div className="relative flex h-full flex-col justify-between gap-6 overflow-hidden rounded-xl border border-white/[0.05] bg-black/40 backdrop-blur-md p-6 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] md:p-6 z-10">
-          <div className="relative flex flex-1 flex-col justify-between gap-3">
-            <div className="w-fit rounded-xl border border-white/[0.08] bg-white/[0.04] p-3 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]">
-              <div className="text-white drop-shadow-md">{icon}</div>
+        <div 
+          className="relative flex h-full flex-col justify-between gap-6 overflow-hidden rounded-xl border border-white/[0.05] bg-black/40 backdrop-blur-md p-6 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] md:p-6 z-10 transition-colors duration-700 group-hover:bg-black/20 group-hover:border-white/[0.1]"
+        >
+          <div
+            className="pointer-events-none absolute -inset-px z-0 transition-opacity duration-700 ease-out"
+            style={{
+              opacity: isHovered ? 1 : 0,
+              background: `radial-gradient(400px circle at ${position.x}px ${position.y}px, rgba(255, 255, 255, 0.08), transparent 50%)`,
+            }}
+          />
+          <div className="relative flex flex-1 flex-col justify-between gap-3 z-20">
+            <div className="w-fit rounded-xl border border-white/[0.08] bg-white/[0.04] p-3 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] transition-all duration-500 group-hover:bg-white/[0.08] group-hover:scale-110 group-hover:border-white/[0.2]">
+              <div className="text-white drop-shadow-md transition-shadow duration-500 group-hover:drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">{icon}</div>
             </div>
             <div className="space-y-3">
-              <h3 className="pt-0.5 text-xl leading-[1.375rem] font-semibold font-sans tracking-[-0.04em] md:text-2xl md:leading-[1.875rem] text-balance text-white drop-shadow-md">
+              <h3 className="pt-0.5 text-xl leading-[1.375rem] font-semibold font-sans tracking-[-0.04em] md:text-2xl md:leading-[1.875rem] text-balance text-white drop-shadow-md transition-all duration-500 group-hover:translate-x-1 group-hover:text-white">
                 {title}
               </h3>
-              <h2 className="[&_b]:md:font-semibold [&_strong]:md:font-semibold font-sans text-sm leading-[1.125rem] md:text-base md:leading-[1.375rem] text-white/60">
+              <h2 className="[&_b]:md:font-semibold [&_strong]:md:font-semibold font-sans text-sm leading-[1.125rem] md:text-base md:leading-[1.375rem] text-white/60 transition-all duration-500 group-hover:text-white/80 group-hover:translate-x-1">
                 {description}
               </h2>
             </div>
