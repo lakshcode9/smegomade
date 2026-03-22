@@ -215,45 +215,51 @@ export default function Home() {
         }
       });
 
-      // Animate images swapping
+      // Animate images swapping (PowerPoint Morph/Slide Style)
       pinItems.forEach((item, index) => {
-        // Initial state
-        if (index === 0) {
-          gsap.set(item, { opacity: 1, zIndex: 10, pointerEvents: "auto", scale: 1, filter: "blur(0px)" });
-          
-          // Fade OUT the first item
-          tl.to(item, { 
-            opacity: 0, 
-            scale: 0.9, 
-            filter: "blur(10px)",
-            pointerEvents: "none",
-            duration: 0.5 
-          }, 0.5);
-        } else {
-          // Fade IN this item
-          tl.fromTo(item, 
-            { opacity: 0, scale: 1.1, filter: "blur(10px)", zIndex: 0, pointerEvents: "none" }, 
-            { 
-              opacity: 1, 
-              scale: 1, 
-              filter: "blur(0px)", 
-              zIndex: 10, 
-              pointerEvents: "auto",
-              duration: 0.5 
-            }, 
-            index - 0.2
-          );
+        // Initial setup for all items
+        gsap.set(item, { 
+          opacity: index === 0 ? 1 : 0, 
+          zIndex: index === 0 ? 20 : 0, 
+          yPercent: index === 0 ? 0 : 50,
+          scale: index === 0 ? 1 : 0.8,
+          filter: "blur(0px)",
+          pointerEvents: index === 0 ? "auto" : "none" 
+        });
 
-          // Fade OUT this item (unless it's the last one)
-          if (index < pinItems.length - 1) {
-            tl.to(item, { 
-              opacity: 0, 
-              scale: 0.9, 
-              filter: "blur(10px)",
-              pointerEvents: "none",
-              duration: 0.5 
-            }, index + 0.5);
-          }
+        const overlap = 0.6; // Higher overlap for "morph" feel
+        const offset = index;
+
+        // Transition logic: Each item has an "Exit" phase and a "Next item enters" phase
+        if (index < pinItems.length - 1) {
+          const nextItem = pinItems[index + 1];
+
+          // Current item exits: slides UP and dissolves
+          tl.to(item, {
+            yPercent: -30,
+            scale: 1.1,
+            opacity: 0,
+            filter: "blur(20px)",
+            duration: 1,
+            ease: "power2.inOut",
+            onStart: () => {
+              gsap.set(item, { pointerEvents: "none" });
+            }
+          }, offset);
+
+          // Next item enters simultaneously: slides UP from below
+          tl.to(nextItem, {
+            yPercent: 0,
+            scale: 1,
+            opacity: 1,
+            filter: "blur(0px)",
+            zIndex: 30, // Stack on top
+            duration: 1,
+            ease: "power2.inOut",
+            onStart: () => {
+              gsap.set(nextItem, { pointerEvents: "auto", zIndex: 30 });
+            }
+          }, offset);
         }
       });
     }
@@ -491,64 +497,58 @@ export default function Home() {
         <div className="clothing-sticky-wrapper sticky top-0 h-screen w-full flex flex-col overflow-hidden">
           <div className="absolute inset-0 pb-12 blur-[100px] opacity-20 bg-gradient-to-t from-white/10 to-transparent pointer-events-none" />
           
-          <div className="mx-auto max-w-6xl px-6 w-full pt-24 md:pt-32 relative z-20">
-            <motion.div className="clothing-header mb-12">
+          <div className="absolute top-12 left-6 right-6 z-50 pointer-events-none">
+            <motion.div className="clothing-header">
               <span className="font-mono text-[0.6rem] uppercase tracking-widest text-white/25 block mb-4">
                 02 — Merchandise
               </span>
-              <div className="grid grid-cols-1 md:grid-cols-2 md:items-end gap-6">
-                <h2 className="font-black text-5xl md:text-7xl uppercase leading-[0.9] text-white tracking-tight">
+              <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <h2 className="font-black text-4xl md:text-6xl uppercase leading-[0.9] text-white tracking-tight">
                   Clothing<span className="text-white/20">.</span>
                 </h2>
-                <p className="text-white/40 text-sm leading-relaxed md:max-w-xs md:text-right">
-                  Scroll and look through — piece by piece. Click to reveal original state.
+                <p className="text-white/40 text-[0.65rem] uppercase tracking-widest leading-relaxed md:max-w-[200px] md:text-right">
+                  Piece by piece iteration. Scroll to morph. Click to reveal color.
                 </p>
               </div>
             </motion.div>
           </div>
 
-          {/* Centered Image display area */}
-          <div className="flex-1 relative flex items-center justify-center mb-10 overflow-hidden">
-            <div className="relative w-full max-w-3xl aspect-square md:aspect-[4/3] px-6">
-              {clothingItems.map((item, i) => (
-                <div 
-                  key={i} 
-                  className={`clothing-item-trigger absolute inset-0 p-4 md:p-10 transition-all duration-300 ${i === 0 ? "opacity-100 z-10" : "opacity-0 z-0"}`}
-                  style={{ pointerEvents: i === 0 ? "auto" : "none" }}
+          {/* Full Screen Image Stack */}
+          <div className="flex-1 relative w-full h-full">
+            {clothingItems.map((item, i) => (
+              <div 
+                key={i} 
+                className="clothing-item-trigger absolute inset-0 w-full h-full flex items-center justify-center pointer-events-none"
+              >
+                <motion.div 
+                  onClick={() => toggleClothing(i)}
+                  className="group relative w-full h-full overflow-hidden cursor-pointer pointer-events-auto"
                 >
-                  <motion.div 
-                    onClick={() => toggleClothing(i)}
-                    className="group relative w-full h-full overflow-hidden bg-white/[0.02] rounded-[2rem] border border-white/[0.08] backdrop-blur-3xl cursor-pointer"
-                  >
-                    <div className="absolute inset-0 w-full h-full">
-                      <RevealWaveImage
-                        src={item.src}
-                        waveSpeed={0.3}
-                        waveFrequency={1.2}
-                        waveAmplitude={0.4}
-                        revealRadius={0.45}
-                        revealSoftness={0.8}
-                        pixelSize={2.5}
-                        mouseRadius={0.3}
-                        toggleColor={revealedClothing.has(i)}
-                      />
+                  <div className="absolute inset-0 w-full h-full">
+                    <RevealWaveImage
+                      src={item.src}
+                      waveSpeed={0.3}
+                      waveFrequency={1.2}
+                      waveAmplitude={0.4}
+                      revealRadius={0.45}
+                      revealSoftness={0.8}
+                      pixelSize={2.5}
+                      mouseRadius={0.3}
+                      toggleColor={revealedClothing.has(i)}
+                    />
+                  </div>
+                  {/* Overlay with counter */}
+                  <div className="absolute inset-x-0 bottom-0 p-8 z-20 pointer-events-none flex justify-between items-end">
+                    <div>
+                      <div className="h-px w-8 bg-white/20 mb-4" />
+                      <span className="font-mono text-[0.55rem] uppercase tracking-[0.2em] text-white/30 group-hover:text-white/60 transition-colors duration-500">
+                        Object {i + 1} // Archive
+                      </span>
                     </div>
-                    {/* Overlay with counter */}
-                    <div className="absolute inset-x-0 bottom-0 p-8 z-20 pointer-events-none flex justify-between items-end">
-                      <div>
-                        <div className="h-px w-8 bg-white/20 mb-4" />
-                        <span className="font-mono text-[0.55rem] uppercase tracking-[0.2em] text-white/30 group-hover:text-white/60 transition-colors duration-500">
-                          Piece {String(i + 1).padStart(2, '0')}
-                        </span>
-                      </div>
-                      <div className="font-mono text-[0.6rem] text-white/10">
-                        {i + 1} / {clothingItems.length}
-                      </div>
-                    </div>
-                  </motion.div>
-                </div>
-              ))}
-            </div>
+                  </div>
+                </motion.div>
+              </div>
+            ))}
           </div>
           
           {/* Scroll progress line at bottom */}
