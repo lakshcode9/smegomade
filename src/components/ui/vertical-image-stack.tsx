@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from "react"
 import { motion, type PanInfo } from "motion/react"
 import { ArrowUp, ArrowDown } from "lucide-react"
+import { RevealWaveImage } from "@/components/ui/reveal-wave-image"
 
 export interface StackImage {
   id: string | number;
@@ -146,13 +147,19 @@ export function VerticalImageStack({ images }: VerticalImageStackProps) {
                 {/* Card edge highlight (milky) */}
                 <div className="absolute inset-0 z-10 rounded-3xl bg-[linear-gradient(110deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0)_40%,rgba(255,255,255,0)_60%,rgba(255,255,255,0.08)_100%)] pointer-events-none" />
 
-                <img
-                  src={image.src || "/placeholder.svg"}
-                  alt={image.alt}
-                  style={{ pointerEvents: 'none' }}
-                  className="object-cover w-full h-full scale-[1.01] transition-transform duration-1000 group-hover:scale-105"
-                  draggable={false}
-                />
+                <div className="absolute inset-0 w-full h-full scale-[1.01] group-hover:scale-105 transition-transform duration-1000">
+                  <RevealWaveImage
+                    src={image.src || "/placeholder.svg"}
+                    waveSpeed={0.4}
+                    waveFrequency={1.5}
+                    waveAmplitude={0.3}
+                    revealRadius={0.35}
+                    revealSoftness={0.7}
+                    pixelSize={2.2}
+                    mouseRadius={0.25}
+                    className="h-full w-full"
+                  />
+                </div>
 
                 {/* Info Overlay for the image */}
                 <div className="absolute inset-x-0 bottom-0 z-20 h-48 bg-gradient-to-t from-black/95 via-black/40 to-transparent pointer-events-none" />
