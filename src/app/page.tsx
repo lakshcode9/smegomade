@@ -161,10 +161,75 @@ function GalleryCard({ src, label, type }: { src: string; label: string; type: s
   );
 }
 
+// ─── Clothing card with WebGL optimization ────────────────
+function ClothingCard({ src, index, isRevealed, onToggle }: { src: string; index: number; isRevealed: boolean; onToggle: () => void }) {
+  const [isInView, setIsInView] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsInView(entry.isIntersecting),
+      { threshold: 0.1, rootMargin: "100px" }
+    );
+    if (cardRef.current) observer.observe(cardRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <motion.div
+      ref={cardRef}
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.8, delay: index * 0.1 }}
+      onClick={onToggle}
+      className="group relative aspect-[4/5] overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02] cursor-pointer"
+    >
+      <div className="absolute inset-0 z-0">
+        <RevealWaveImage
+          src={src}
+          waveSpeed={0.3}
+          waveFrequency={1.2}
+          waveAmplitude={0.4}
+          revealRadius={0.45}
+          revealSoftness={0.8}
+          pixelSize={2.5}
+          mouseRadius={0.3}
+          toggleColor={isRevealed}
+          renderCanvas={isInView}
+        />
+      </div>
+      
+      {/* Label Overlay */}
+      <div className="absolute inset-x-0 bottom-0 p-6 z-10 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+        <div className="flex justify-between items-end">
+          <div>
+            <div className="font-mono text-[0.5rem] uppercase tracking-widest text-white/40 mb-1">
+              Archive // Object {index + 1}
+            </div>
+            <div className="font-black text-sm uppercase tracking-wide text-white">
+              SMEGOMADE® PIECE
+            </div>
+          </div>
+          <div className="font-mono text-[0.6rem] text-white/40 group-hover:text-white transition-colors">
+            {isRevealed ? "COLORED" : "DITHERED"}
+          </div>
+        </div>
+      </div>
+
+      {/* Static indicator for interaction */}
+      <div className="absolute top-4 right-4 z-10">
+        <div className="w-8 h-8 rounded-full border border-white/20 flex items-center justify-center backdrop-blur-md bg-black/20 group-hover:border-white transition-colors duration-300">
+          <span className="text-[0.6rem] font-mono text-white/60 group-hover:text-white">?</span>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 // ─── Main page ────────────────────────────────────────────
 export default function Home() {
   const [revealedClothing, setRevealedClothing] = useState<Set<number>>(new Set());
-  const [activeItemIndex, setActiveItemIndex] = useState(0);
   const clothingContainerRef = useRef<HTMLDivElement>(null);
   
   const toggleClothing = (index: number) => {
@@ -181,7 +246,7 @@ export default function Home() {
   const heroOpacity = useTransform(scrollYProgress, [0, 0.15], [1, 0]);
 
   useEffect(() => {
-    // GSAP animations for sections
+    // Section reveal animations only
     const sections = document.querySelectorAll("section");
     sections.forEach((section) => {
       gsap.fromTo(
@@ -202,81 +267,6 @@ export default function Home() {
         }
       );
     });
-
-    // Pin and scroll effect for Clothing section
-    if (clothingContainerRef.current) {
-      const pinItems = clothingContainerRef.current.querySelectorAll(".clothing-item-trigger");
-      
-      if (pinItems.length > 0) {
-        const tl = gsap.timeline({
-          scrollTrigger: {
-            trigger: clothingContainerRef.current,
-            start: "top top",
-            end: "bottom bottom",
-            scrub: true,
-            pin: ".clothing-sticky-wrapper",
-            onUpdate: (self) => {
-              // Update state for WebGL rendering management
-              const progress = self.progress;
-              const index = Math.min(
-                Math.floor(progress * clothingItems.length), 
-                clothingItems.length - 1
-              );
-              if (index !== activeItemIndex) {
-                setActiveItemIndex(index);
-              }
-            }
-          }
-        });
-
-        // Animate images swapping (PowerPoint Morph/Slide Style)
-        pinItems.forEach((item, index) => {
-          // Initial setup for all items
-          gsap.set(item, { 
-            opacity: index === 0 ? 1 : 0, 
-            zIndex: index === 0 ? 20 : 0, 
-            yPercent: index === 0 ? 0 : 50,
-            scale: index === 0 ? 1 : 0.8,
-            filter: "blur(0px)",
-            pointerEvents: index === 0 ? "auto" : "none" 
-          });
-
-          const offset = index;
-
-          // Transition logic: Each item has an "Exit" phase and a "Next item enters" phase
-          if (index < pinItems.length - 1) {
-            const nextItem = pinItems[index + 1];
-
-            // Current item exits: slides UP and dissolves
-            tl.to(item, {
-              yPercent: -30,
-              scale: 1.1,
-              opacity: 0,
-              filter: "blur(10px)", // Reduced blur for performance
-              duration: 1,
-              ease: "power2.inOut",
-              onStart: () => {
-                gsap.set(item, { pointerEvents: "none" });
-              }
-            }, offset);
-
-            // Next item enters simultaneously: slides UP from below
-            tl.to(nextItem, {
-              yPercent: 0,
-              scale: 1,
-              opacity: 1,
-              filter: "blur(0px)",
-              zIndex: 30, // Stack on top
-              duration: 1,
-              ease: "power2.inOut",
-              onStart: () => {
-                gsap.set(nextItem, { pointerEvents: "auto", zIndex: 30 });
-              }
-            }, offset);
-          }
-        });
-      }
-    }
 
     return () => {
       ScrollTrigger.getAll().forEach((t) => t.kill());
@@ -506,72 +496,41 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── CLOTHING (SCROLL INTERACTIVE) ───────────────────────── */}
-      <section ref={clothingContainerRef} className="relative h-[600vh] border-t border-white/[0.05]">
-        <div className="clothing-sticky-wrapper sticky top-0 h-screen w-full flex flex-col overflow-hidden">
-          <div className="absolute inset-0 pb-12 blur-[100px] opacity-20 bg-gradient-to-t from-white/10 to-transparent pointer-events-none" />
-          
-          <div className="absolute top-12 left-6 right-6 z-50 pointer-events-none">
-            <motion.div className="clothing-header">
+      {/* ── CLOTHING GRID ─────────────────────────────── */}
+      <section id="clothing" className="py-24 md:py-32 relative border-t border-white/[0.05]">
+        <div className="mx-auto max-w-6xl px-6">
+          {/* Section header */}
+          <motion.div 
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="mb-16 flex flex-col md:flex-row md:items-end justify-between gap-8"
+          >
+            <div>
               <span className="font-mono text-[0.6rem] uppercase tracking-widest text-white/25 block mb-4">
                 02 — Merchandise
               </span>
-              <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-                <h2 className="font-black text-4xl md:text-6xl uppercase leading-[0.9] text-white tracking-tight">
-                  Clothing<span className="text-white/20">.</span>
-                </h2>
-                <p className="text-white/40 text-[0.65rem] uppercase tracking-widest leading-relaxed md:max-w-[200px] md:text-right">
-                  Piece by piece iteration. Scroll to morph. Click to reveal color.
-                </p>
-              </div>
-            </motion.div>
-          </div>
+              <h2 className="font-black text-5xl md:text-7xl uppercase leading-[0.9] text-white tracking-tight">
+                Clothing<span className="text-white/20">.</span>
+              </h2>
+            </div>
+            <p className="text-white/40 text-sm leading-relaxed md:max-w-xs md:text-right">
+              Piece by piece iteration of the SMEGOMADE® identity. Interactive reveal on every archive piece.
+            </p>
+          </motion.div>
 
-          {/* Full Screen Image Stack */}
-          <div className="flex-1 relative w-full h-full">
+          {/* Grid layout */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
             {clothingItems.map((item, i) => (
-              <div 
-                key={i} 
-                className="clothing-item-trigger absolute inset-0 w-full h-full flex items-center justify-center pointer-events-none"
-              >
-                <motion.div 
-                  onClick={() => toggleClothing(i)}
-                  className="group relative w-full h-full overflow-hidden cursor-pointer pointer-events-auto"
-                >
-                  <div className="absolute inset-0 w-full h-full">
-                    <RevealWaveImage
-                      src={item.src}
-                      waveSpeed={0.3}
-                      waveFrequency={1.2}
-                      waveAmplitude={0.4}
-                      revealRadius={0.45}
-                      revealSoftness={0.8}
-                      pixelSize={2.5}
-                      mouseRadius={0.3}
-                      toggleColor={revealedClothing.has(i)}
-                      renderCanvas={Math.abs(activeItemIndex - i) <= 1}
-                    />
-                  </div>
-                  {/* Overlay with counter */}
-                  <div className="absolute inset-x-0 bottom-0 p-8 z-20 pointer-events-none flex justify-between items-end">
-                    <div>
-                      <div className="h-px w-8 bg-white/20 mb-4" />
-                      <span className="font-mono text-[0.55rem] uppercase tracking-[0.2em] text-white/30 group-hover:text-white/60 transition-colors duration-500">
-                        Object {i + 1} // Archive
-                      </span>
-                    </div>
-                  </div>
-                </motion.div>
-              </div>
+              <ClothingCard 
+                key={i}
+                src={item.src}
+                index={i}
+                isRevealed={revealedClothing.has(i)}
+                onToggle={() => toggleClothing(i)}
+              />
             ))}
-          </div>
-          
-          {/* Scroll progress line at bottom */}
-          <div className="h-1 bg-white/5 w-full relative z-30">
-            <motion.div 
-              className="h-full bg-white/20 origin-left"
-              style={{ scaleX: useTransform(useScroll({ target: clothingContainerRef, offset: ["start start", "end end"] }).scrollYProgress, [0, 1], [0, 1]) }}
-            />
           </div>
         </div>
       </section>
