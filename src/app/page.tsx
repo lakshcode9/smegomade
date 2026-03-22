@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ModulesGrid } from "@/components/ui/modules-grid";
+import { VerticalImageStack } from "@/components/ui/vertical-image-stack";
 import { motion, useScroll, useTransform } from "motion/react";
 
 // ─── Work gallery data ────────────────────────────────────
@@ -365,11 +366,19 @@ export default function Home() {
           </p>
           </motion.div>
 
-          {/* Main gallery grid */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-1">
-            {galleryItems.map((item) => (
-              <GalleryCard key={item.src} {...item} />
-            ))}
+          {/* Main gallery stack */}
+          <div className="mt-12 overflow-hidden rounded-[2rem] border border-white/10 bg-black/50 backdrop-blur-xl shadow-2xl relative">
+            {/* Soft backdrop glow to compliment the stack */}
+            <div className="absolute inset-0 bg-gradient-to-br from-white/[0.05] to-transparent pointer-events-none" />
+            <VerticalImageStack 
+              images={galleryItems.map((item, index) => ({
+                id: index,
+                src: item.src,
+                alt: item.label,
+                label: item.label,
+                type: item.type
+              }))} 
+            />
           </div>
         </div>
       </section>
