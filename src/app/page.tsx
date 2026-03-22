@@ -164,6 +164,7 @@ function GalleryCard({ src, label, type }: { src: string; label: string; type: s
 // ─── Main page ────────────────────────────────────────────
 export default function Home() {
   const [revealedClothing, setRevealedClothing] = useState<Set<number>>(new Set());
+  const clothingContainerRef = useRef<HTMLDivElement>(null);
   const toggleClothing = (index: number) => {
     setRevealedClothing(prev => {
       const next = new Set(prev);
@@ -199,6 +200,63 @@ export default function Home() {
         }
       );
     });
+
+    // Pin and scroll effect for Clothing section
+    if (clothingContainerRef.current) {
+      const pinItems = clothingContainerRef.current.querySelectorAll(".clothing-item-trigger");
+      
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: clothingContainerRef.current,
+          start: "top top",
+          end: "bottom bottom",
+          scrub: true,
+          pin: ".clothing-sticky-wrapper",
+        }
+      });
+
+      // Animate images swapping
+      pinItems.forEach((item, index) => {
+        // Initial state
+        if (index === 0) {
+          gsap.set(item, { opacity: 1, zIndex: 10, pointerEvents: "auto", scale: 1, filter: "blur(0px)" });
+          
+          // Fade OUT the first item
+          tl.to(item, { 
+            opacity: 0, 
+            scale: 0.9, 
+            filter: "blur(10px)",
+            pointerEvents: "none",
+            duration: 0.5 
+          }, 0.5);
+        } else {
+          // Fade IN this item
+          tl.fromTo(item, 
+            { opacity: 0, scale: 1.1, filter: "blur(10px)", zIndex: 0, pointerEvents: "none" }, 
+            { 
+              opacity: 1, 
+              scale: 1, 
+              filter: "blur(0px)", 
+              zIndex: 10, 
+              pointerEvents: "auto",
+              duration: 0.5 
+            }, 
+            index - 0.2
+          );
+
+          // Fade OUT this item (unless it's the last one)
+          if (index < pinItems.length - 1) {
+            tl.to(item, { 
+              opacity: 0, 
+              scale: 0.9, 
+              filter: "blur(10px)",
+              pointerEvents: "none",
+              duration: 0.5 
+            }, index + 0.5);
+          }
+        }
+      });
+    }
 
     return () => {
       ScrollTrigger.getAll().forEach((t) => t.kill());
@@ -428,62 +486,77 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── CLOTHING ───────────────────────── */}
-      <section className="py-16 md:py-24 border-t border-white/[0.05] relative overflow-hidden">
-        <div className="absolute inset-0 pb-12 blur-[100px] opacity-20 bg-gradient-to-t from-white/10 to-transparent pointer-events-none" />
-        <div className="mx-auto max-w-6xl px-6 relative z-10">
-          <motion.div 
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className="mb-12"
-          >
-            <span className="font-mono text-[0.6rem] uppercase tracking-widest text-white/25 block mb-4">
-              02 — Merchandise
-            </span>
-            <div className="grid grid-cols-1 md:grid-cols-2 md:items-end gap-6">
-              <h2 className="font-black text-5xl md:text-7xl uppercase leading-[0.9] text-white tracking-tight">
-                Clothing<span className="text-white/20">.</span>
-              </h2>
-              <p className="text-white/40 text-sm leading-relaxed md:max-w-xs md:text-right">
-                Custom garment design and visual direction — where graphic design becomes wearable.
-              </p>
+      {/* ── CLOTHING (SCROLL INTERACTIVE) ───────────────────────── */}
+      <section ref={clothingContainerRef} className="relative h-[600vh] border-t border-white/[0.05]">
+        <div className="clothing-sticky-wrapper sticky top-0 h-screen w-full flex flex-col overflow-hidden">
+          <div className="absolute inset-0 pb-12 blur-[100px] opacity-20 bg-gradient-to-t from-white/10 to-transparent pointer-events-none" />
+          
+          <div className="mx-auto max-w-6xl px-6 w-full pt-24 md:pt-32 relative z-20">
+            <motion.div className="clothing-header mb-12">
+              <span className="font-mono text-[0.6rem] uppercase tracking-widest text-white/25 block mb-4">
+                02 — Merchandise
+              </span>
+              <div className="grid grid-cols-1 md:grid-cols-2 md:items-end gap-6">
+                <h2 className="font-black text-5xl md:text-7xl uppercase leading-[0.9] text-white tracking-tight">
+                  Clothing<span className="text-white/20">.</span>
+                </h2>
+                <p className="text-white/40 text-sm leading-relaxed md:max-w-xs md:text-right">
+                  Scroll and look through — piece by piece. Click to reveal original state.
+                </p>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Centered Image display area */}
+          <div className="flex-1 relative flex items-center justify-center mb-10 overflow-hidden">
+            <div className="relative w-full max-w-3xl aspect-square md:aspect-[4/3] px-6">
+              {clothingItems.map((item, i) => (
+                <div 
+                  key={i} 
+                  className={`clothing-item-trigger absolute inset-0 p-4 md:p-10 transition-all duration-300 ${i === 0 ? "opacity-100 z-10" : "opacity-0 z-0"}`}
+                  style={{ pointerEvents: i === 0 ? "auto" : "none" }}
+                >
+                  <motion.div 
+                    onClick={() => toggleClothing(i)}
+                    className="group relative w-full h-full overflow-hidden bg-white/[0.02] rounded-[2rem] border border-white/[0.08] backdrop-blur-3xl cursor-pointer"
+                  >
+                    <div className="absolute inset-0 w-full h-full">
+                      <RevealWaveImage
+                        src={item.src}
+                        waveSpeed={0.3}
+                        waveFrequency={1.2}
+                        waveAmplitude={0.4}
+                        revealRadius={0.45}
+                        revealSoftness={0.8}
+                        pixelSize={2.5}
+                        mouseRadius={0.3}
+                        toggleColor={revealedClothing.has(i)}
+                      />
+                    </div>
+                    {/* Overlay with counter */}
+                    <div className="absolute inset-x-0 bottom-0 p-8 z-20 pointer-events-none flex justify-between items-end">
+                      <div>
+                        <div className="h-px w-8 bg-white/20 mb-4" />
+                        <span className="font-mono text-[0.55rem] uppercase tracking-[0.2em] text-white/30 group-hover:text-white/60 transition-colors duration-500">
+                          Piece {String(i + 1).padStart(2, '0')}
+                        </span>
+                      </div>
+                      <div className="font-mono text-[0.6rem] text-white/10">
+                        {i + 1} / {clothingItems.length}
+                      </div>
+                    </div>
+                  </motion.div>
+                </div>
+              ))}
             </div>
-          </motion.div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {clothingItems.map((item, i) => (
-              <motion.div 
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-50px" }}
-                transition={{ duration: 0.8, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
-                key={i} 
-                onClick={() => toggleClothing(i)}
-                className="group relative overflow-hidden bg-white/[0.02] aspect-square rounded-[2rem] border border-white/[0.08] backdrop-blur-3xl cursor-pointer"
-              >
-                <div className="absolute inset-0 w-full h-full">
-                  <RevealWaveImage
-                    src={item.src}
-                    waveSpeed={0.3}
-                    waveFrequency={1.2}
-                    waveAmplitude={0.4}
-                    revealRadius={0.45}
-                    revealSoftness={0.8}
-                    pixelSize={2.5}
-                    mouseRadius={0.3}
-                    toggleColor={revealedClothing.has(i)}
-                  />
-                </div>
-                {/* Overlay to show interactions are possible */}
-                <div className="absolute inset-x-0 bottom-0 p-8 z-20 pointer-events-none">
-                  <div className="h-px w-8 bg-white/20 mb-4 group-hover:w-12 transition-all duration-700" />
-                  <span className="font-mono text-[0.55rem] uppercase tracking-[0.2em] text-white/30 group-hover:text-white/60 transition-colors duration-500">
-                    Piece {String(i + 1).padStart(2, '0')}
-                  </span>
-                </div>
-              </motion.div>
-            ))}
+          </div>
+          
+          {/* Scroll progress line at bottom */}
+          <div className="h-1 bg-white/5 w-full relative z-30">
+            <motion.div 
+              className="h-full bg-white/20 origin-left"
+              style={{ scaleX: useTransform(useScroll({ target: clothingContainerRef, offset: ["start start", "end end"] }).scrollYProgress, [0, 1], [0, 1]) }}
+            />
           </div>
         </div>
       </section>
