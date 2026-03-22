@@ -5,6 +5,12 @@ import { ModulesGrid } from "@/components/ui/modules-grid";
 import { VerticalImageStack } from "@/components/ui/vertical-image-stack";
 import { RevealWaveImage } from "@/components/ui/reveal-wave-image";
 import { motion, useScroll, useTransform } from "motion/react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(ScrollTrigger);
+}
 
 // ─── Work gallery data ────────────────────────────────────
 const galleryItems = [
@@ -157,9 +163,47 @@ function GalleryCard({ src, label, type }: { src: string; label: string; type: s
 
 // ─── Main page ────────────────────────────────────────────
 export default function Home() {
+  const [revealedClothing, setRevealedClothing] = useState<Set<number>>(new Set());
+  const toggleClothing = (index: number) => {
+    setRevealedClothing(prev => {
+      const next = new Set(prev);
+      if (next.has(index)) next.delete(index);
+      else next.add(index);
+      return next;
+    });
+  };
+
   const { scrollYProgress } = useScroll();
   const heroY = useTransform(scrollYProgress, [0, 0.2], [0, 150]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.15], [1, 0]);
+
+  useEffect(() => {
+    // GSAP animations for sections
+    const sections = document.querySelectorAll("section");
+    sections.forEach((section) => {
+      gsap.fromTo(
+        section.querySelectorAll(".gsap-reveal"),
+        { opacity: 0, y: 50, scale: 0.98 },
+        {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          duration: 1.2,
+          ease: "expo.out",
+          stagger: 0.1,
+          scrollTrigger: {
+            trigger: section,
+            start: "top 85%",
+            toggleActions: "play none none reverse",
+          },
+        }
+      );
+    });
+
+    return () => {
+      ScrollTrigger.getAll().forEach((t) => t.kill());
+    };
+  }, []);
 
   return (
     <main className="min-h-screen bg-black text-white overflow-x-hidden relative">
@@ -415,7 +459,8 @@ export default function Home() {
                 viewport={{ once: true, margin: "-50px" }}
                 transition={{ duration: 0.8, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
                 key={i} 
-                className="group relative overflow-hidden bg-white/[0.02] aspect-square rounded-[2rem] border border-white/[0.08] backdrop-blur-3xl"
+                onClick={() => toggleClothing(i)}
+                className="group relative overflow-hidden bg-white/[0.02] aspect-square rounded-[2rem] border border-white/[0.08] backdrop-blur-3xl cursor-pointer"
               >
                 <div className="absolute inset-0 w-full h-full">
                   <RevealWaveImage
@@ -427,6 +472,7 @@ export default function Home() {
                     revealSoftness={0.8}
                     pixelSize={2.5}
                     mouseRadius={0.3}
+                    toggleColor={revealedClothing.has(i)}
                   />
                 </div>
                 {/* Overlay to show interactions are possible */}

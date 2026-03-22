@@ -22,6 +22,18 @@ export function VerticalImageStack({ images }: VerticalImageStackProps) {
   const lastNavigationTime = useRef(0)
   const navigationCooldown = 400 // ms between navigations
 
+  const [revealedCards, setRevealedCards] = useState<Set<string | number>>(new Set())
+  const toggleCardReveal = (id: string | number, e: React.MouseEvent) => {
+    // Prevent toggle if it's a significant drag
+    if (e.defaultPrevented) return
+    setRevealedCards(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
   const navigate = useCallback((newDirection: number) => {
     const now = Date.now()
     if (now - lastNavigationTime.current < navigationCooldown) return
@@ -126,6 +138,7 @@ export function VerticalImageStack({ images }: VerticalImageStackProps) {
               dragConstraints={{ top: 0, bottom: 0 }}
               dragElastic={0.2}
               onDragEnd={handleDragEnd}
+              onClick={(e) => isCurrent && toggleCardReveal(image.id, e)}
               style={{
                 transformStyle: "preserve-3d",
                 zIndex: style.zIndex,
@@ -157,6 +170,7 @@ export function VerticalImageStack({ images }: VerticalImageStackProps) {
                     revealSoftness={0.7}
                     pixelSize={2.2}
                     mouseRadius={0.25}
+                    toggleColor={revealedCards.has(image.id)}
                     className="h-full w-full"
                   />
                 </div>

@@ -34,6 +34,7 @@ const fragmentShader = `
   uniform float uRevealSoftness;
   uniform float uPixelSize;
   uniform float uMouseActive;
+  uniform float uPersistentColor; // 0.0 to 1.0 toggle state
   
   uniform float uWaveSpeed;
   uniform float uWaveFrequency;
@@ -65,7 +66,10 @@ const fragmentShader = `
     
     // Wave and Ripple Distortions
     float time = uTime;
-    float waveStrength = uWaveAmplitude * 0.1;
+    
+    // Distortions should fade to zero when uPersistentColor is 1
+    float distortionFade = 1.0 - uPersistentColor;
+    float waveStrength = uWaveAmplitude * 0.1 * distortionFade;
     
     // Continuous waves
     float wave1 = sin(uv.y * uWaveFrequency + time * uWaveSpeed) * waveStrength;
@@ -83,7 +87,7 @@ const fragmentShader = `
         
         float rippleFreq = uWaveFrequency * 5.0;
         float rippleSpeed = uWaveSpeed * 1.0;
-        float rippleStrength = uWaveAmplitude * 0.05;
+        float rippleStrength = uWaveAmplitude * 0.05 * distortionFade;
         
         float ripple = sin(dist * rippleFreq - time * rippleSpeed) * rippleStrength * mouseInfluence * uMouseActive;
         distortedUv.x += ripple;
@@ -119,7 +123,10 @@ const fragmentShader = `
     float revealAmount = 1.0 - smoothstep(innerRadius, outerRadius, revealDist);
     revealAmount *= uMouseActive;
     
-    vec3 finalColor = mix(bwColor, color.rgb, revealAmount);
+    // Combine flashlight reveal with persistent color toggle
+    float totalReveal = max(revealAmount, uPersistentColor);
+    
+    vec3 finalColor = mix(bwColor, color.rgb, totalReveal);
     
     gl_FragColor = vec4(finalColor, color.a);
   }
@@ -136,6 +143,7 @@ interface ImagePlaneProps {
   waveAmplitude: number;
   mouseRadius: number;
   isMouseInCanvas: boolean;
+  persistentColor: boolean;
 }
 
 function ImagePlane({
@@ -149,6 +157,7 @@ function ImagePlane({
   waveAmplitude,
   mouseRadius,
   isMouseInCanvas,
+  persistentColor,
 }: ImagePlaneProps) {
   const texture = useTexture(src);
   const meshRef = useRef<THREE.Mesh>(null);
@@ -169,6 +178,7 @@ function ImagePlane({
       uWaveFrequency: { value: waveFrequency },
       uWaveAmplitude: { value: waveAmplitude },
       uMouseRadius: { value: mouseRadius },
+      uPersistentColor: { value: 0 },
     }),
     [
       texture,
@@ -213,6 +223,10 @@ function ImagePlane({
           (pointer.y + 1) / 2,
         );
       }
+
+      // Smoothly animate the persistent color state
+      const targetPersistent = persistentColor ? 1.0 : 0.0;
+      material.uniforms.uPersistentColor.value += (targetPersistent - material.uniforms.uPersistentColor.value) * 0.1;
     }
   });
 
@@ -237,6 +251,7 @@ interface RevealWaveImageProps {
   waveFrequency?: number;
   waveAmplitude?: number;
   mouseRadius?: number;
+  toggleColor?: boolean;
   className?: string;
 }
 
@@ -249,6 +264,7 @@ export const RevealWaveImage = ({
   waveFrequency = 3.0,
   waveAmplitude = 0.2,
   mouseRadius = 0.2,
+  toggleColor = false,
   className = "h-full w-full",
 }: RevealWaveImageProps) => {
   const [isMouseInCanvas, setIsMouseInCanvas] = useState(false);
@@ -289,6 +305,7 @@ export const RevealWaveImage = ({
             waveAmplitude={waveAmplitude}
             mouseRadius={mouseRadius}
             isMouseInCanvas={isMouseInCanvas}
+            persistentColor={toggleColor}
           />
         </Canvas>
       )}
