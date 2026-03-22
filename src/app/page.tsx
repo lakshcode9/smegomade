@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ModulesGrid } from "@/components/ui/modules-grid";
+import { motion, useScroll, useTransform } from "motion/react";
 
 // ─── Work gallery data ────────────────────────────────────
 const galleryItems = [
@@ -127,7 +128,13 @@ function AnimatedStat({ end, label, suffix = "" }: { end: number; label: string;
 // ─── Gallery card ─────────────────────────────────────────
 function GalleryCard({ src, label, type }: { src: string; label: string; type: string }) {
   return (
-    <div className="group relative overflow-hidden bg-[#0a0a0a] aspect-[3/4]">
+    <motion.div 
+      initial={{ opacity: 0, y: 40, scale: 0.95 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+      className="group relative overflow-hidden bg-[#0a0a0a] aspect-[3/4]"
+    >
       <img
         src={src}
         alt={label}
@@ -142,12 +149,16 @@ function GalleryCard({ src, label, type }: { src: string; label: string; type: s
           {label}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
 // ─── Main page ────────────────────────────────────────────
 export default function Home() {
+  const { scrollYProgress } = useScroll();
+  const heroY = useTransform(scrollYProgress, [0, 0.2], [0, 150]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.15], [1, 0]);
+
   return (
     <main className="min-h-screen bg-black text-white overflow-x-hidden relative">
       {/* GLOBAL AMBIENT BACKGROUND FOR GLASSMORPHISM */}
@@ -216,33 +227,54 @@ export default function Home() {
           <div className="absolute inset-0 bg-gradient-to-b from-black via-black/60 to-black" />
         </div>
 
-        <div className="relative z-10 flex flex-col items-center">
+        <motion.div 
+          style={{ y: heroY, opacity: heroOpacity }}
+          className="relative z-10 flex flex-col items-center"
+        >
           {/* Brand mark */}
-          <span className="font-mono text-[0.7rem] uppercase tracking-[0.3em] text-white/40 mb-8">
+          <motion.span 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="font-mono text-[0.7rem] uppercase tracking-[0.3em] text-white/40 mb-8"
+          >
             smegomade®
-          </span>
+          </motion.span>
 
           {/* Hero headline */}
-          <h1
+          <motion.h1
+            initial={{ opacity: 0, scale: 0.9, y: 30 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 1, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
             className="font-black uppercase leading-none text-white break-words"
-            style={{ fontSize: "clamp(3rem, 13vw, 14rem)", letterSpacing: "-0.04em" }}
+            style={{ fontSize: "clamp(2.5rem, 9vw, 14rem)", letterSpacing: "-0.04em" }}
           >
             KNOWLEDGE<span className="text-white/40">.</span>
-          </h1>
+          </motion.h1>
 
           {/* Sub */}
-          <p className="mt-6 font-light tracking-[0.4em] uppercase text-white/40 text-sm md:text-base">
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            className="mt-6 font-light tracking-[0.4em] uppercase text-white/40 text-sm md:text-base text-center break-words"
+          >
             design education
-          </p>
+          </motion.p>
 
           {/* Big white space */}
-          <div className="mt-24 mb-8 space-y-4">
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            className="mt-24 mb-8 space-y-4 px-4"
+          >
             <p className="max-w-md mx-auto text-white/50 text-sm md:text-base leading-relaxed font-light">
             The design knowledge behind cover art for{" "}
             <span className="text-white">Brzo Trči Ljanmi, TNG, Jay Bride</span>{" "}
             and artists across the Balkans — now shared for the first time.
-          </p>
-          </div>
+            </p>
+          </motion.div>
 
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row gap-4 items-center">
@@ -261,11 +293,16 @@ export default function Home() {
           </div>
 
           {/* Scroll hint */}
-          <div className="mt-20 flex flex-col items-center gap-2 text-white/20">
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 1, delay: 1 }}
+            className="mt-20 flex flex-col items-center gap-2 text-white/20"
+          >
             <div className="w-px h-12 bg-gradient-to-b from-transparent to-white/20" />
             <span className="font-mono text-[0.55rem] uppercase tracking-widest">Scroll</span>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </section>
 
       {/* ── CREDENTIALS TICKER ─────────────── */}
@@ -283,7 +320,13 @@ export default function Home() {
             <AnimatedStat end={4} label="Disciplines" />
             <AnimatedStat end={1} label="Certified Contributor" suffix="×" />
           </div>
-          <div className="mt-16 text-center">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+            className="mt-16 text-center"
+          >
             <a
               href="https://genius.com/artists/Smegomade"
               target="_blank"
@@ -294,7 +337,7 @@ export default function Home() {
               Verified on Genius — @smegomade
               <span className="text-white/20">↗</span>
             </a>
-          </div>
+          </motion.div>
         </div>
       </section>
 
@@ -302,7 +345,13 @@ export default function Home() {
       <section id="work" className="py-20 md:py-32 relative">
         <div className="mx-auto max-w-6xl px-6">
           {/* Section header */}
-          <div className="mb-12 md:mb-20 grid grid-cols-1 gap-6 md:grid-cols-2 md:items-end">
+          <motion.div 
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="mb-12 md:mb-20 grid grid-cols-1 gap-6 md:grid-cols-2 md:items-end"
+          >
             <div>
               <span className="font-mono text-[0.6rem] uppercase tracking-widest text-white/25 block mb-4">
                 01 — Work
@@ -314,7 +363,7 @@ export default function Home() {
           <p className="text-white/40 text-sm leading-relaxed md:max-w-xs md:text-right">
             Client cover art, custom typography, and personal concept posters. Every piece built from scratch.
           </p>
-          </div>
+          </motion.div>
 
           {/* Main gallery grid */}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-1">
@@ -329,7 +378,13 @@ export default function Home() {
       <section className="py-16 md:py-24 border-t border-white/[0.05] relative overflow-hidden">
         <div className="absolute inset-0 pb-12 blur-[100px] opacity-20 bg-gradient-to-t from-white/10 to-transparent pointer-events-none" />
         <div className="mx-auto max-w-6xl px-6 relative z-10">
-          <div className="mb-12">
+          <motion.div 
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="mb-12"
+          >
             <span className="font-mono text-[0.6rem] uppercase tracking-widest text-white/25 block mb-4">
               02 — Merchandise
             </span>
@@ -341,16 +396,23 @@ export default function Home() {
                 Custom garment design and visual direction — where graphic design becomes wearable.
               </p>
             </div>
-          </div>
+          </motion.div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {clothingItems.map((item, i) => (
-              <div key={i} className="group relative overflow-hidden bg-[#0a0a0a] aspect-square">
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.8, y: 30 }}
+                whileInView={{ opacity: 1, scale: 1, y: 0 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ duration: 0.6, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
+                key={i} 
+                className="group relative overflow-hidden bg-[#0a0a0a] aspect-square rounded-sm"
+              >
                 <img
                   src={item.src}
                   alt={`smegomade clothing ${i + 1}`}
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 />
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -358,7 +420,13 @@ export default function Home() {
 
       {/* Statement break */}
       <section className="py-24 md:py-48 border-t border-white/[0.05] relative bg-black/10 backdrop-blur-lg">
-        <div className="mx-auto max-w-5xl px-6 text-center">
+        <motion.div 
+          initial={{ opacity: 0, y: 50 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+          className="mx-auto max-w-5xl px-6 text-center"
+        >
           <p
             className="font-black uppercase leading-[0.95] text-white text-opacity-90 break-words"
             style={{ fontSize: "clamp(2.5rem, 7vw, 6rem)", letterSpacing: "-0.02em" }}
@@ -370,14 +438,21 @@ export default function Home() {
           </p>
           <div className="mt-12 flex flex-wrap gap-x-12 gap-y-4 justify-center">
             {["Cover Art", "Custom Typography", "Visual Identity", "Music Direction", "Clothing Design"].map(
-              (tag) => (
-                <span key={tag} className="font-mono text-[0.6rem] uppercase tracking-widest text-white/25">
+              (tag, index) => (
+                <motion.span 
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6, delay: 0.4 + (index * 0.1) }}
+                  key={tag} 
+                  className="font-mono text-[0.6rem] uppercase tracking-widest text-white/25"
+                >
                   {tag}
-                </span>
+                </motion.span>
               )
             )}
           </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* ── THE KNOWLEDGE (modules) ─────────── */}
@@ -388,13 +463,19 @@ export default function Home() {
       {/* ── GET ACCESS (CTA) ───────────────── */}
       <section id="get" className="py-24 md:py-40 relative flex flex-col items-center justify-center border-t border-white/[0.05] border-b border-white/[0.05] overflow-hidden bg-white/[0.01] backdrop-blur-2xl shadow-[0_-4px_30px_rgba(0,0,0,0.1)]">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:48px_48px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_10%,transparent_100%)]" />
-        <div className="relative z-10 text-center px-6">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95, y: 40 }}
+          whileInView={{ opacity: 1, scale: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+          className="relative z-10 text-center px-6"
+        >
           <span className="font-mono text-[0.6rem] uppercase tracking-widest text-white/25 block mb-6">
             Immediate Access
           </span>
           <h2
             className="font-black uppercase leading-none text-white mb-8 break-words"
-            style={{ fontSize: "clamp(3rem, 13vw, 10rem)", letterSpacing: "-0.04em" }}
+            style={{ fontSize: "clamp(2.5rem, 9vw, 10rem)", letterSpacing: "-0.04em" }}
           >
             KNOWLEDGE<span className="text-white/20">.</span>
           </h2>
@@ -411,7 +492,7 @@ export default function Home() {
           <p className="mt-6 font-mono text-[0.55rem] uppercase tracking-[0.2em] text-white/15">
             Lifetime access · Instant delivery · No subscriptions
           </p>
-        </div>
+        </motion.div>
       </section>
 
       {/* Footer */}

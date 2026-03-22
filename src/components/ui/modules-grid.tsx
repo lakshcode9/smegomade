@@ -3,13 +3,20 @@
 import { Box, Palette, BookOpen, Music, Settings } from "lucide-react";
 import { GlowingEffect } from "@/components/ui/glowing-effect";
 import { cn } from "@/lib/utils";
+import { motion } from "motion/react";
 
 export function ModulesGrid() {
   return (
     <section className="py-24 border-t border-white/[0.05] border-b border-white/[0.05] relative bg-black/5 backdrop-blur-3xl shadow-[0_-4px_30px_rgba(0,0,0,0.1)]">
       <div className="mx-auto max-w-6xl px-6 relative z-10">
         {/* Section header */}
-        <div className="mb-16 grid grid-cols-1 gap-6 md:grid-cols-2 md:items-end">
+        <motion.div 
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-50px" }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className="mb-16 grid grid-cols-1 gap-6 md:grid-cols-2 md:items-end"
+        >
           <div>
             <span className="font-mono text-[0.6rem] uppercase tracking-widest text-white/25 block mb-4">
               03 — The Knowledge
@@ -24,35 +31,40 @@ export function ModulesGrid() {
             work — direct from a Genius certified designer who has built visuals
             for some of music&apos;s biggest names.
           </p>
-        </div>
+        </motion.div>
 
         {/* Glowing grid - exact implementation of demo.tsx */}
         <ul className="grid grid-cols-1 grid-rows-none gap-4 md:grid-cols-12 md:grid-rows-3 lg:gap-4 xl:max-h-[34rem] xl:grid-rows-2">
           <GridItem
+            delay={0.1}
             area="md:[grid-area:1/1/2/7] xl:[grid-area:1/1/2/5]"
             icon={<Box className="h-4 w-4" />}
             title="Visual Identity & Cover Art"
             description="How to build a complete visual world for an artist from nothing. Concept, direction, and execution."
           />
           <GridItem
+            delay={0.2}
             area="md:[grid-area:1/7/2/13] xl:[grid-area:2/1/3/5]"
             icon={<Palette className="h-4 w-4" />}
             title="Custom Typography"
             description="From blood-metal lettering to luxury gold scripts — how to design type that feels like no font ever could."
           />
           <GridItem
+            delay={0.3}
             area="md:[grid-area:2/1/3/7] xl:[grid-area:1/5/3/8]"
             icon={<BookOpen className="h-4 w-4" />}
             title="Poster & Editorial"
             description="Composition theory, color psychology, image layering, and the editorial sensibility that stops scrolling."
           />
           <GridItem
+            delay={0.4}
             area="md:[grid-area:2/7/3/13] xl:[grid-area:1/8/2/13]"
             icon={<Music className="h-4 w-4" />}
             title="Music-Linked Creativity"
             description="How to translate a song, an artist's energy, and a sonic identity into a visual language."
           />
           <GridItem
+            delay={0.5}
             area="md:[grid-area:3/1/4/13] xl:[grid-area:2/8/3/13]"
             icon={<Settings className="h-4 w-4" />}
             title="Process & Presence"
@@ -69,11 +81,18 @@ interface GridItemProps {
   icon: React.ReactNode;
   title: string;
   description: React.ReactNode;
+  delay?: number;
 }
 
-const GridItem = ({ area, icon, title, description }: GridItemProps) => {
+const GridItem = ({ area, icon, title, description, delay = 0 }: GridItemProps) => {
   return (
-    <li className={cn("min-h-[14rem] list-none", area)}>
+    <motion.li 
+      initial={{ opacity: 0, scale: 0.95, y: 30 }}
+      whileInView={{ opacity: 1, scale: 1, y: 0 }}
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{ duration: 0.8, delay, ease: [0.16, 1, 0.3, 1] }}
+      className={cn("min-h-[14rem] list-none", area)}
+    >
       <div className="relative h-full rounded-[1.25rem] md:rounded-[1.5rem] border border-white/[0.08] bg-white/[0.02] backdrop-blur-3xl shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] p-2 md:p-3 overflow-hidden">
         <GlowingEffect
           blur={20}
@@ -100,6 +119,6 @@ const GridItem = ({ area, icon, title, description }: GridItemProps) => {
           </div>
         </div>
       </div>
-    </li>
+    </motion.li>
   );
 };
