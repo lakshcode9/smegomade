@@ -1,7 +1,7 @@
 "use client";
 
+import React, { useState, useRef } from "react";
 import { Box, Palette, BookOpen, Music, Settings } from "lucide-react";
-import { GlowingEffect } from "@/components/ui/glowing-effect";
 import { cn } from "@/lib/utils";
 import { motion } from "motion/react";
 
